@@ -1,7 +1,7 @@
 package com.lyc.lease.model.entity;
 
-import com.atguigu.lease.model.enums.BaseStatus;
-import com.atguigu.lease.model.enums.SystemUserType;
+import com.lyc.lease.model.enums.BaseStatus;
+import com.lyc.lease.model.enums.SystemUserType;
 import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
