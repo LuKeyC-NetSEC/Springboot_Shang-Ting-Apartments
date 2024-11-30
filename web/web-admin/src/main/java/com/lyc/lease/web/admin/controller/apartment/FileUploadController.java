@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/admin/file")
 @RestController
 public class FileUploadController {
+
     @Autowired
     private FileService service;
 
