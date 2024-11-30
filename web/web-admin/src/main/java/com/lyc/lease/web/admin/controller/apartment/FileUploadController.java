@@ -2,8 +2,10 @@ package com.lyc.lease.web.admin.controller.apartment;
 
 
 import com.lyc.lease.common.result.Result;
+import com.lyc.lease.web.admin.service.FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,11 +17,19 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/admin/file")
 @RestController
 public class FileUploadController {
+    @Autowired
+    private FileService service;
 
     @Operation(summary = "上传文件")
     @PostMapping("upload")
     public Result<String> upload(@RequestParam MultipartFile file) {
-        return Result.ok();
+        try {
+            String url = service.upload(file);
+            return Result.ok(url);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.fail();
+        }
     }
 
 }
