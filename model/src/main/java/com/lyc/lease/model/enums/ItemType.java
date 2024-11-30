@@ -11,8 +11,8 @@ public enum ItemType implements BaseEnum {
     ROOM(2, "房间");
 
 
-    @EnumValue
-    @JsonValue
+    @EnumValue //在使用MyBatis Plus进行数据库操作时，@EnumValue会确保code字段被正确映射到数据库列。
+    @JsonValue //在使用Jackson进行JSON序列化时，@JsonValue会确保枚举对象被序列化为其code值。
     private Integer code;
     private String name;
 
