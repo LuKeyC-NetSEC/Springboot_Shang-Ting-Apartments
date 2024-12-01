@@ -13,10 +13,10 @@ import org.springframework.context.annotation.Configuration;
  */
 
 @Data
-@ConfigurationProperties(prefix = "minio")
+@ConfigurationProperties(prefix = "minio") // 读取 web-admin 模块中配置文件中minio开头的属性
 public class MinioProperties {
-    private String endpoint;
-    private String accessKey;
-    private String secretKey;
-    private String bucketName;
+    private String endpoint; // 对应配置文件中的 minio.endpoint
+    private String accessKey; // 对应配置文件中的 minio.access-key
+    private String secretKey; // 对应配置文件中的 minio.secret-Key
+    private String bucketName; // 对应配置文件中的 minio.bucket-name
 }

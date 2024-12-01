@@ -43,19 +43,24 @@ public class FileServiceImpl implements FileService {
                 BucketExistsArgs.builder()
                         .bucket(properties.getBucketName())
                         .build());
+
         if (!bucketExists) {
+            // 创建存储桶
             minioClient.makeBucket(
                     MakeBucketArgs.builder()
                             .bucket(properties.getBucketName())
                             .build());
+            // 设置存储桶访问规则
             minioClient.setBucketPolicy(
                     SetBucketPolicyArgs.builder()
                             .bucket(properties.getBucketName())
                             .config(createBucketPolicyConfig(properties.getBucketName()))
                             .build());
         }
+            // 设置存储对象在存储桶的位置
         String fileName = new SimpleDateFormat("yyyyMMdd").format(new Date()) +
                 "/" + UUID.randomUUID() + "-" + file.getOriginalFilename();
+            // 流式上传存储对象
         minioClient.putObject(
                 PutObjectArgs.builder()
                         .bucket(properties.getBucketName())
@@ -63,6 +68,7 @@ public class FileServiceImpl implements FileService {
                         .stream(file.getInputStream(), file.getSize(), -1)
                         .contentType(file.getContentType())
                         .build());
+        // 返回对象在存储桶的位置 URL
         return String.join("/", properties.getEndpoint(), properties.getBucketName(), fileName);
     }
 
