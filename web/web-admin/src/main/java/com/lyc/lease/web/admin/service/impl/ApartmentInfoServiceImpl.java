@@ -1,10 +1,20 @@
 package com.lyc.lease.web.admin.service.impl;
 
-import com.lyc.lease.model.entity.ApartmentInfo;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.lyc.lease.model.entity.*;
+import com.lyc.lease.model.enums.ItemType;
 import com.lyc.lease.web.admin.mapper.ApartmentInfoMapper;
-import com.lyc.lease.web.admin.service.ApartmentInfoService;
+import com.lyc.lease.web.admin.service.*;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lyc.lease.web.admin.vo.apartment.ApartmentSubmitVo;
+import com.lyc.lease.web.admin.vo.graph.GraphVo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author liubo
@@ -14,7 +24,97 @@ import org.springframework.stereotype.Service;
 @Service
 public class ApartmentInfoServiceImpl extends ServiceImpl<ApartmentInfoMapper, ApartmentInfo>
         implements ApartmentInfoService {
+    // 公寓信息和图片信息、配套信息、杂费值、城市信息均有联系
+    @Autowired
+    private GraphInfoService graphInfoService;
 
+    @Autowired
+    private ApartmentFacilityService apartmentFacilityService;
+
+    @Autowired
+    private ApartmentLabelService apartmentLabelService;
+
+    @Autowired
+    private ApartmentFeeValueService apartmentFeeValueService;
+
+    @Override
+    public void saveOrUpdateApartment(ApartmentSubmitVo apartmentSubmitVo) {
+        boolean isUpdate = apartmentSubmitVo.getId() != null;
+        super.saveOrUpdate(apartmentSubmitVo);
+
+        if (isUpdate){
+            LambdaQueryWrapper<GraphInfo> graphQueryWrapper = new LambdaQueryWrapper<>();
+            graphQueryWrapper.eq(GraphInfo::getItemType, ItemType.APARTMENT);
+            graphQueryWrapper.eq(GraphInfo::getItemId, apartmentSubmitVo.getId());
+            graphInfoService.remove(graphQueryWrapper);
+
+            LambdaQueryWrapper<ApartmentFacility> facilityQueryWrapper = new LambdaQueryWrapper<>();
+            facilityQueryWrapper.eq(ApartmentFacility::getApartmentId,apartmentSubmitVo.getId());
+            apartmentFacilityService.remove(facilityQueryWrapper);
+
+            LambdaQueryWrapper<ApartmentLabel> labelQueryWrapper = new LambdaQueryWrapper<>();
+            labelQueryWrapper.eq(ApartmentLabel::getApartmentId,apartmentSubmitVo.getId());
+            apartmentLabelService.remove(labelQueryWrapper);
+
+            LambdaQueryWrapper<ApartmentFeeValue> feeQueryWrapper = new LambdaQueryWrapper<>();
+            feeQueryWrapper.eq(ApartmentFeeValue::getFeeValueId,apartmentSubmitVo.getId());
+            apartmentFeeValueService.remove(feeQueryWrapper);
+        }
+
+        //1.插入图片列表 GraphVo为前端返回的模型 与实际的图片信息表相差两个字段（图片所属对象类型、图片所属对象ID）
+        List<GraphVo> graphVoList = apartmentSubmitVo.getGraphVoList();
+        if (!CollectionUtils.isEmpty(graphVoList)){
+            ArrayList<GraphInfo> graphInfoList = new ArrayList<>();
+            for (GraphVo graphVo : graphVoList) {
+                GraphInfo graphInfo = new GraphInfo();
+                graphInfo.setItemType(ItemType.APARTMENT);
+                graphInfo.setId(apartmentSubmitVo.getId());
+                graphInfo.setName(graphVo.getName());
+                graphInfo.setUrl(graphVo.getUrl());
+                graphInfoList.add(graphInfo);
+            }
+            graphInfoService.saveBatch(graphInfoList);
+        }
+
+        //2.插入配套列表 FacilityInfo为前端返回的模型 与实际的配套信息表之间的关系表相差一个字段（设施ID）
+        List<Long> facilityInfoIds = apartmentSubmitVo.getFacilityInfoIds();
+        if (!CollectionUtils.isEmpty(facilityInfoIds)){
+            ArrayList<ApartmentFacility> facilityList = new ArrayList<>();
+            for (Long facilityInfoId : facilityInfoIds) {
+                ApartmentFacility apartmentFacility = new ApartmentFacility();
+                apartmentFacility.setApartmentId(apartmentSubmitVo.getId());
+                apartmentFacility.setFacilityId(facilityInfoId);
+                facilityList.add(apartmentFacility);
+            }
+            apartmentFacilityService.saveBatch(facilityList);
+        }
+
+        //3.插入标签列表
+        List<Long> labelIds = apartmentSubmitVo.getLabelIds();
+        if (!CollectionUtils.isEmpty(labelIds)) {
+            List<ApartmentLabel> apartmentLabelList = new ArrayList<>();
+            for (Long labelId : labelIds) {
+                ApartmentLabel apartmentLabel = new ApartmentLabel();
+                apartmentLabel.setApartmentId(apartmentSubmitVo.getId());
+                apartmentLabel.setLabelId(labelId);
+                apartmentLabelList.add(apartmentLabel);
+            }
+            apartmentLabelService.saveBatch(apartmentLabelList);
+        }
+
+        //4.插入杂费列表
+        List<Long> feeValueIds = apartmentSubmitVo.getFeeValueIds();
+        if (!CollectionUtils.isEmpty(feeValueIds)) {
+            ArrayList<ApartmentFeeValue> apartmentFeeValueList = new ArrayList<>();
+            for (Long feeValueId : feeValueIds) {
+                ApartmentFeeValue apartmentFeeValue = new ApartmentFeeValue();
+                apartmentFeeValue.setApartmentId(apartmentSubmitVo.getId());
+                apartmentFeeValue.setFeeValueId(feeValueId);
+                apartmentFeeValueList.add(apartmentFeeValue);
+            }
+            apartmentFeeValueService.saveBatch(apartmentFeeValueList);
+        }
+    }
 }
 
 
