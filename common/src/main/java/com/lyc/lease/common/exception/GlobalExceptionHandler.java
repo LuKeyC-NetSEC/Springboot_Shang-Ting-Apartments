@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
  * @Date: 2024/11/30 17:16
  * @Version: 1.0
  */
-@ControllerAdvice
+@ControllerAdvice // 用于处理Controller层方法的异常
 public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseBody
