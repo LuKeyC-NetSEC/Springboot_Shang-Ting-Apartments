@@ -154,7 +154,7 @@ public class ApartmentInfoServiceImpl extends ServiceImpl<ApartmentInfoMapper, A
 
         List<LabelInfo> labelInfoList = labelInfoMapper.selectListByApartmentId(id);
 
-        List<FacilityInfo> facilityInfoList = facilityInfoMapper.selectListByApartmentId(id)
+        List<FacilityInfo> facilityInfoList = facilityInfoMapper.selectListByApartmentId(id);
 
         List<FeeValueVo> feeValueVoList = feeValueMapper.selectListByApartmentId(id);
 
