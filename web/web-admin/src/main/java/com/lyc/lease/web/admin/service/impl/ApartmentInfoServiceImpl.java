@@ -3,6 +3,8 @@ package com.lyc.lease.web.admin.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.lyc.lease.common.exception.LeaseException;
+import com.lyc.lease.common.result.ResultCodeEnum;
 import com.lyc.lease.model.entity.*;
 import com.lyc.lease.model.enums.ItemType;
 import com.lyc.lease.web.admin.mapper.*;
@@ -47,6 +49,9 @@ public class ApartmentInfoServiceImpl extends ServiceImpl<ApartmentInfoMapper, A
     @Autowired
     private FeeValueMapper feeValueMapper;
 
+    @Autowired
+    private RoomInfoMapper roomInfoMapper;
+
     // 公寓信息和图片信息、配套信息、杂费值、城市信息均有联系
     @Autowired
     private GraphInfoService graphInfoService;
@@ -61,34 +66,33 @@ public class ApartmentInfoServiceImpl extends ServiceImpl<ApartmentInfoMapper, A
     private ApartmentFeeValueService apartmentFeeValueService;
 
 
-
     @Override
     public void saveOrUpdateApartment(ApartmentSubmitVo apartmentSubmitVo) {
         boolean isUpdate = apartmentSubmitVo.getId() != null;
         super.saveOrUpdate(apartmentSubmitVo);
 
-        if (isUpdate){
+        if (isUpdate) {
             LambdaQueryWrapper<GraphInfo> graphQueryWrapper = new LambdaQueryWrapper<>();
             graphQueryWrapper.eq(GraphInfo::getItemType, ItemType.APARTMENT);
             graphQueryWrapper.eq(GraphInfo::getItemId, apartmentSubmitVo.getId());
             graphInfoService.remove(graphQueryWrapper);
 
             LambdaQueryWrapper<ApartmentFacility> facilityQueryWrapper = new LambdaQueryWrapper<>();
-            facilityQueryWrapper.eq(ApartmentFacility::getApartmentId,apartmentSubmitVo.getId());
+            facilityQueryWrapper.eq(ApartmentFacility::getApartmentId, apartmentSubmitVo.getId());
             apartmentFacilityService.remove(facilityQueryWrapper);
 
             LambdaQueryWrapper<ApartmentLabel> labelQueryWrapper = new LambdaQueryWrapper<>();
-            labelQueryWrapper.eq(ApartmentLabel::getApartmentId,apartmentSubmitVo.getId());
+            labelQueryWrapper.eq(ApartmentLabel::getApartmentId, apartmentSubmitVo.getId());
             apartmentLabelService.remove(labelQueryWrapper);
 
             LambdaQueryWrapper<ApartmentFeeValue> feeQueryWrapper = new LambdaQueryWrapper<>();
-            feeQueryWrapper.eq(ApartmentFeeValue::getFeeValueId,apartmentSubmitVo.getId());
+            feeQueryWrapper.eq(ApartmentFeeValue::getFeeValueId, apartmentSubmitVo.getId());
             apartmentFeeValueService.remove(feeQueryWrapper);
         }
 
         //1.插入图片列表 GraphVo为前端返回的模型 与实际的图片信息表相差两个字段（图片所属对象类型、图片所属对象ID）
         List<GraphVo> graphVoList = apartmentSubmitVo.getGraphVoList();
-        if (!CollectionUtils.isEmpty(graphVoList)){
+        if (!CollectionUtils.isEmpty(graphVoList)) {
             ArrayList<GraphInfo> graphInfoList = new ArrayList<>();
             for (GraphVo graphVo : graphVoList) {
                 GraphInfo graphInfo = new GraphInfo();
@@ -103,7 +107,7 @@ public class ApartmentInfoServiceImpl extends ServiceImpl<ApartmentInfoMapper, A
 
         //2.插入配套列表 FacilityInfo为前端返回的模型 与实际的配套信息表之间的关系表相差一个字段（设施ID）
         List<Long> facilityInfoIds = apartmentSubmitVo.getFacilityInfoIds();
-        if (!CollectionUtils.isEmpty(facilityInfoIds)){
+        if (!CollectionUtils.isEmpty(facilityInfoIds)) {
             ArrayList<ApartmentFacility> facilityList = new ArrayList<>();
             for (Long facilityInfoId : facilityInfoIds) {
                 ApartmentFacility apartmentFacility = new ApartmentFacility();
@@ -143,14 +147,14 @@ public class ApartmentInfoServiceImpl extends ServiceImpl<ApartmentInfoMapper, A
 
     @Override
     public IPage<ApartmentItemVo> pageItem(Page<ApartmentItemVo> page, ApartmentQueryVo queryVo) {
-        return apartmentInfoMapper.pageItem(page,queryVo);
+        return apartmentInfoMapper.pageItem(page, queryVo);
     }
 
     @Override
     public ApartmentDetailVo getDetailById(Long id) {
         ApartmentInfo apartmentInfo = apartmentInfoMapper.selectById(id);
 
-        List<GraphVo> graphVoList = graphInfoMapper.selectListByItemTypeAndId(ItemType.APARTMENT,id);
+        List<GraphVo> graphVoList = graphInfoMapper.selectListByItemTypeAndId(ItemType.APARTMENT, id);
 
         List<LabelInfo> labelInfoList = labelInfoMapper.selectListByApartmentId(id);
 
@@ -159,12 +163,42 @@ public class ApartmentInfoServiceImpl extends ServiceImpl<ApartmentInfoMapper, A
         List<FeeValueVo> feeValueVoList = feeValueMapper.selectListByApartmentId(id);
 
         ApartmentDetailVo apartmentDetailVo = new ApartmentDetailVo();
-        BeanUtils.copyProperties(apartmentInfo,apartmentDetailVo);
+        BeanUtils.copyProperties(apartmentInfo, apartmentDetailVo);
         apartmentDetailVo.setGraphVoList(graphVoList);
         apartmentDetailVo.setLabelInfoList(labelInfoList);
         apartmentDetailVo.setFacilityInfoList(facilityInfoList);
         apartmentDetailVo.setFeeValueVoList(feeValueVoList);
         return apartmentDetailVo;
+    }
+
+    @Override
+    public void removeApartmentById(Long id) {
+
+        LambdaQueryWrapper<RoomInfo> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(RoomInfo::getApartmentId, id);
+        Long count = roomInfoMapper.selectCount(queryWrapper);
+        if (count > 0) {
+            throw new LeaseException(ResultCodeEnum.ADMIN_APARTMENT_DELETE_ERROR);
+        }
+        super.removeById(id);
+
+        LambdaQueryWrapper<GraphInfo> graphQueryWrapper = new LambdaQueryWrapper<>();
+        graphQueryWrapper.eq(GraphInfo::getItemType, ItemType.APARTMENT);
+        graphQueryWrapper.eq(GraphInfo::getItemId, id);
+        graphInfoService.remove(graphQueryWrapper);
+
+        LambdaQueryWrapper<ApartmentFacility> facilityQueryWrapper = new LambdaQueryWrapper<>();
+        facilityQueryWrapper.eq(ApartmentFacility::getApartmentId, id);
+        apartmentFacilityService.remove(facilityQueryWrapper);
+
+        LambdaQueryWrapper<ApartmentLabel> labelQueryWrapper = new LambdaQueryWrapper<>();
+        labelQueryWrapper.eq(ApartmentLabel::getApartmentId, id);
+        apartmentLabelService.remove(labelQueryWrapper);
+
+        LambdaQueryWrapper<ApartmentFeeValue> feeQueryWrapper = new LambdaQueryWrapper<>();
+        feeQueryWrapper.eq(ApartmentFeeValue::getFeeValueId, id);
+        apartmentFeeValueService.remove(feeQueryWrapper);
+
     }
 }
 

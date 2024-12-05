@@ -16,7 +16,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseBody
     public Result error(Exception e){
+        e.getMessage();
         e.printStackTrace();
         return Result.fail();
     }
+
+    @ExceptionHandler(LeaseException.class)
+    @ResponseBody
+    public Result error(LeaseException e){
+        return Result.fail(e.getCode(), e.getMessage());
+    }
+
 }

@@ -22,6 +22,7 @@ public enum ResultCodeEnum {
     ADMIN_CAPTCHA_CODE_EXPIRED(303, "验证码已过期"),
     ADMIN_CAPTCHA_CODE_NOT_FOUND(304, "未输入验证码"),
 
+    ADMIN_APARTMENT_DELETE_ERROR(318, "请先删除房间"),
 
     ADMIN_LOGIN_AUTH(305, "未登陆"),
     ADMIN_ACCOUNT_NOT_EXIST_ERROR(306, "账号不存在"),
