@@ -153,7 +153,9 @@ public class ApartmentInfoServiceImpl extends ServiceImpl<ApartmentInfoMapper, A
     @Override
     public ApartmentDetailVo getDetailById(Long id) {
         ApartmentInfo apartmentInfo = apartmentInfoMapper.selectById(id);
-
+        if(apartmentInfo == null){
+            return null;
+        }
         List<GraphVo> graphVoList = graphInfoMapper.selectListByItemTypeAndId(ItemType.APARTMENT, id);
 
         List<LabelInfo> labelInfoList = labelInfoMapper.selectListByApartmentId(id);
