@@ -1,6 +1,7 @@
 package com.lyc.lease.web.admin.controller.lease;
 
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lyc.lease.common.result.Result;
 import com.lyc.lease.model.entity.LeaseAgreement;
@@ -48,13 +49,17 @@ public class LeaseAgreementController {
     @Operation(summary = "根据id删除租约信息")
     @DeleteMapping("removeById")
     public Result removeById(@RequestParam Long id) {
-
+        service.removeById(id);
         return Result.ok();
     }
 
     @Operation(summary = "根据id更新租约状态")
     @PostMapping("updateStatusById")
     public Result updateStatusById(@RequestParam Long id, @RequestParam LeaseStatus status) {
+        LambdaUpdateWrapper<LeaseAgreement> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(LeaseAgreement::getId,id);
+        updateWrapper.set(LeaseAgreement::getStatus,status);
+        service.update(updateWrapper);
         return Result.ok();
     }
 
