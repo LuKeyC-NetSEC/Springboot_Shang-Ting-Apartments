@@ -1,5 +1,6 @@
 package com.lyc.lease.web.admin.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lyc.lease.model.entity.LeaseAgreement;
 import com.lyc.lease.web.admin.vo.agreement.AgreementQueryVo;
 import com.lyc.lease.web.admin.vo.agreement.AgreementVo;
@@ -12,5 +13,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2023-07-24 15:48:00
 */
 public interface LeaseAgreementService extends IService<LeaseAgreement> {
+
+    AgreementVo getAgreementById(Long id);
+
+    IPage<AgreementVo> pageAgreement(Page<AgreementVo> page, AgreementQueryVo queryVo);
 
 }
