@@ -2,6 +2,7 @@ package com.lyc.lease;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * @Author: LuKey_C
@@ -10,6 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @Version: 1.0
  */
 
+@EnableScheduling //开启定时任务
 @SpringBootApplication
 public class AdminWebApplication {
     public static void main(String[] args) {
